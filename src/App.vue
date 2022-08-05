@@ -1,37 +1,40 @@
 <template>
   <div id="app">
-    <data-loader :request="helloRequest">
-      <template #default="{ loading, error, response, startRequest }">
-        <div>
-          <div v-if="error">
-            {{ error }}
-          </div>
-          <HelloWorld :msg="response" :start="startRequest" />
-        </div>
+    <data-loader :request="requestRemoteData">
+      <template #default="{ loading, response, triggerRequest }">
+        <DataConsumer :renderData="response" :triggerRequest="triggerRequest" />
+      </template>
+      <template #skeleton>
+        <div>Skeleton is blinking...</div>
+      </template>
+      <template #error="{ error }">
+        <div class="error">Error: {{ error }}</div>
       </template>
     </data-loader>
   </div>
 </template>
 
 <script>
-import HelloWorld from './components/HelloWorld.vue';
+import DataConsumer from './components/DataConsumer.vue';
 import DataLoader from './components/DataLoader.vue';
 import { defineComponent } from 'vue';
 
 export default defineComponent({
   name: 'App',
   components: {
-    HelloWorld,
+    DataConsumer,
     DataLoader,
   },
 
   setup() {
-    const helloRequest = () => {
-      return fetch('https://jsonplaceholder.typicode.com/todos/1');
+    const requestRemoteData = () => {
+      return fetch('https://jsonplaceholder.typicode.com/todos/1').then(
+        (response) => response.json()
+      );
     };
 
     return {
-      helloRequest,
+      requestRemoteData,
     };
   },
 });
@@ -45,5 +48,8 @@ export default defineComponent({
   text-align: center;
   color: #2c3e50;
   margin-top: 60px;
+}
+.error {
+  color: tomato;
 }
 </style>

@@ -1,9 +1,19 @@
 <template>
-  <slot v-bind="{ error, loading, response, startRequest }"></slot>
+  <template v-if="loading">
+    <slot name="skeleton">Skeleton starts to blink....</slot>
+  </template>
+  <template v-else-if="error">
+    <slot name="error" v-bind="{ error }">Error occured</slot>
+  </template>
+  <template v-else>
+    <slot v-bind="{ response, triggerRequest }"></slot>
+  </template>
 </template>
 
 <script>
 import { defineComponent, ref, watch } from 'vue';
+
+const delay = (ms) => new Promise((res) => setTimeout(res, ms));
 
 export default defineComponent({
   name: 'DataLoader',
@@ -15,23 +25,24 @@ export default defineComponent({
     },
   },
 
-  setup() {
+  setup(props) {
     const response = ref(null);
     const error = ref(null);
     const loading = ref(false);
 
     const trigger = ref(false);
-    const startRequest = () => {
+
+    const triggerRequest = () => {
       trigger.value = !trigger.value;
     };
 
     watch(trigger, () => {
       error.value = null;
       loading.value = true;
-      request()
+
+      Promise.all([props.request(), delay(2000)])
         .then((serverResponse) => {
           response.value = serverResponse;
-          console.log(serverResponse);
         })
         .catch((err) => {
           error.value = err;
@@ -42,7 +53,7 @@ export default defineComponent({
     });
 
     return {
-      startRequest,
+      triggerRequest,
       response,
       loading,
       error,
